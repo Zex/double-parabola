@@ -38,9 +38,10 @@ public:
         step_x_ = step;
     }
     
-    Points CurvePoints()
+    Points& CurvePoints()
     {
-        return curve_points_;
+		Points &ret = curve_points_;
+        return ret;
     }
 
     CvPoint StartPt()
@@ -58,29 +59,36 @@ public:
         return vertex_;
     }
 
+    CvPoint VertexPt(CvPoint vertex)
+	{
+		vertex_ = vertex;
+	}
+
     float* ParabConst();
     void CalcParabConst(CvPoint start, CvPoint end);
     void GenParabPoints(CvPoint start, CvPoint end, int &index);
 };
 
-class DoubleHalfParabola// : public SingleParabola
+class DoubleHalfParabola : public SingleParabola
 {
     CvPoint mid1_, mid2_;
-    SingleParabola *parab_full_;
 
 public:
+
+    typedef SingleParabola base;
+
     DoubleHalfParabola(CvPoint start, CvPoint end, CvPoint vertex, int step = 1);
 
     ~DoubleHalfParabola()
     {
-        delete parab_full_;
     }
 
     void GenFullCurve();
+	void VertexPt(CvPoint vertex);
 
     Points FullCurve()
     {
-        return parab_full_->CurvePoints();
+        return CurvePoints();
     }
 };
 
