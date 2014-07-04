@@ -5,23 +5,26 @@
  */
 #include "DoubleParabola.h" 
 
-SingleParabola::SingleParabola()
-{
-}
-
 SingleParabola::SingleParabola(CvPoint start, CvPoint end, CvPoint vertex, int step)
 : a_(0.0), b_(0.0), c_(0.0), step_x_(step)
 {
 	start_ = start;
 	end_ = end;
 	vertex_ = vertex;
-	points_count_ = (end_.x - start_.x)/step_x_;
-	curve_points_.resize(points_count_);
+
+	Resize();
+}
+
+unsigned int SingleParabola::Resize()
+{
+	curve_points_.resize((end_.x - start_.x)/step_x_);
 
 	curve_points_[0].x = start_.x;
 	curve_points_[0].y = start_.y;
 	curve_points_[curve_points_.size()-1].x = end_.x;
 	curve_points_[curve_points_.size()-1].y = end_.y;
+
+	return curve_points_.size();
 }
 
 float* SingleParabola::ParabConst()
@@ -46,7 +49,7 @@ void SingleParabola::GenParabPoints(CvPoint start, CvPoint end, int &index)
 {
 	if (2 > curve_points_.size()) return;
 
-	while (index < points_count_-1 && curve_points_[index-1].x <= end.x)
+	while (index < curve_points_.size()-1 && curve_points_[index-1].x <= end.x)
 	{
 		curve_points_[index].x = curve_points_[index-1].x + step_x_;
 		float ix = curve_points_[index].x - start.x;
@@ -83,27 +86,48 @@ void DoubleHalfParabola::VertexPt(CvPoint vertex)
 	base::VertexPt(vertex);
 }
 
-//// ----------test---------->
+void FlexablePainter::VertexPt(CvPoint vertex)
+{
+	if (StartPt().x > vertex.x)
+		vertex.x = StartPt().x;
+	else if (EndPt().x < vertex.x)
+		vertex.x = EndPt().x;
+
+	base::VertexPt(vertex);
+}
+
+void FlexablePainter::PaintFlexable()
+{
+	if (!image_) return;
+
+	GenFullCurve();
+
+	for (Points::iterator it = CurvePoints().begin(); it != CurvePoints().end(); it++)
+	{
+		cvCircle(image_, *it, 0, CV_RGB(150,100,100), 1);
+	}
+
+	PaintCross(base::VertexPt());
+}
+
+void FlexablePainter::PaintCross(CvPoint center)
+{
+    cvLine(image_, cvPoint(center.x-10, center.y-10), cvPoint(center.x+10, center.y+10), CV_RGB(150,100,100), 1, 8, 0); 
+    cvLine(image_, cvPoint(center.x+10, center.y-10), cvPoint(center.x-10, center.y+10), CV_RGB(150,100,100), 1, 8, 0);
+}
+
+// ----------test---------->
 //IplImage *image = 0;
 //
 //void on_mouse(int event, int x, int y, int flags, void *param) 
 //{
-//	DoubleHalfParabola *dhp = (DoubleHalfParabola*)param;//(cvPoint(200, 200), cvPoint(500, 200), cvPoint(x, y), 10);
-//	dhp->VertexPt(cvPoint(x, y)); 
+//	FlexablePainter *fp = (FlexablePainter*)param;//(cvPoint(200, 200), cvPoint(500, 200), cvPoint(x, y), 10);
+//	fp->VertexPt(cvPoint(x, y)); 
 //
 //	if (event == CV_EVENT_MOUSEMOVE) //修改控制点坐标 
 //	{
 //		cvZero(image);
-//
-//		dhp->GenFullCurve();
-//
-//		for (Points::iterator it = dhp->CurvePoints().begin(); it != dhp->CurvePoints().end(); it++)
-//		{
-//			cvCircle(image, *it, 0, CV_RGB(150,100,100), 1);
-//		}
-//	
-//	    cvLine(image, cvPoint(x-10, y-10), cvPoint(x+10, y+10), CV_RGB(150,100,100), 1, 8, 0); 
-//	    cvLine(image, cvPoint(x+10, y-10), cvPoint(x-10, y+10), CV_RGB(150,100,100), 1, 8, 0);
+//		fp->PaintFlexable();
 //	}  
 //	else if (event == CV_EVENT_LBUTTONDOWN)
 //	{
@@ -114,20 +138,22 @@ void DoubleHalfParabola::VertexPt(CvPoint vertex)
 // 
 //int main(int argc, char* argv[]) 
 //{ 
-//	DoubleHalfParabola *dhp = new DoubleHalfParabola(cvPoint(200, 200), cvPoint(500, 200), cvPoint(250, 200), 10);
 //	CvSize image_sz = cvSize(1000,1000);  
-//	image = cvCreateImage(image_sz , 8, 3); 
+//	image = cvCreateImage(image_sz , 8, 3);
+//
+//	FlexablePainter *fp= new FlexablePainter(image, cvPoint(200, 200), cvPoint(500, 200), cvPoint(250, 200), 10);
 //	cvNamedWindow("Tinny Tiger", CV_WINDOW_AUTOSIZE); 
-//	cvSetMouseCallback("Tinny Tiger", on_mouse, dhp); 
+//	cvSetMouseCallback("Tinny Tiger", on_mouse, fp); 
 //	//cvResizeWindow("Tinny Tiger",500,500); 
 // 
 //	cvShowImage("Tinny Tiger", image); 
 //	cvWaitKey(0);
 //
-//	delete dhp; 
+//	delete fp;
+//
 //	return 0; 
 //}
-//// ----------test----------|
+// ----------test----------|
  
 //-----------------------------
 //	float a = (start.y-y)/pow((float)(end.x-x), 2);
