@@ -3,7 +3,7 @@
  *
  * Author: Zex <top_zlynch@yahoo.com>
  */
-#include "ts-parabola.h" 
+#include "DoubleParabola.h" 
 
 SingleParabola::SingleParabola()
 {
@@ -56,48 +56,54 @@ void SingleParabola::GenParabPoints(CvPoint start, CvPoint end, int &index)
 }
 
 DoubleHalfParabola::DoubleHalfParabola(CvPoint start, CvPoint end, CvPoint vertex, int step)
+: SingleParabola(start, end, vertex, step)
 {
-	mid1_.x = vertex.x + vertex.x - start.x;
-	mid1_.y = start.y;
-
-	mid2_.x = vertex.x - (end.x - vertex.x);
-	mid2_.y = start.y;
-
-	parab_full_ = new SingleParabola(start, end, vertex, step);
+	VertexPt(vertex);
 }
 
 void DoubleHalfParabola::GenFullCurve()
 {
 	int index = 1;
 
-	parab_full_->CalcParabConst(parab_full_->StartPt(), mid1_);
-	parab_full_->GenParabPoints(parab_full_->StartPt(), parab_full_->VertexPt(), index);
+	CalcParabConst(StartPt(), mid1_);
+	GenParabPoints(StartPt(), base::VertexPt(), index);
 
-	parab_full_->CalcParabConst(mid2_, parab_full_->EndPt());
-		parab_full_->GenParabPoints(mid2_, parab_full_->EndPt(), index);
+	CalcParabConst(mid2_, EndPt());
+	GenParabPoints(mid2_, EndPt(), index);
+}
+
+void DoubleHalfParabola::VertexPt(CvPoint vertex)
+{
+	mid1_.x = vertex.x + vertex.x - StartPt().x;
+	mid1_.y = StartPt().y;
+
+	mid2_.x = vertex.x - (EndPt().x - vertex.x);
+	mid2_.y = StartPt().y;
+
+	base::VertexPt(vertex);
 }
 
 //// ----------test---------->
-//
 //IplImage *image = 0;
 //
 //void on_mouse(int event, int x, int y, int flags, void *param) 
 //{
-//	DoubleHalfParabola dhp(cvPoint(200, 200), cvPoint(500, 200), cvPoint(x, y), 10);
-// 
+//	DoubleHalfParabola *dhp = (DoubleHalfParabola*)param;//(cvPoint(200, 200), cvPoint(500, 200), cvPoint(x, y), 10);
+//	dhp->VertexPt(cvPoint(x, y)); 
+//
 //	if (event == CV_EVENT_MOUSEMOVE) //修改控制点坐标 
 //	{
 //		cvZero(image);
 //
-//		dhp.GenFullCurve();
+//		dhp->GenFullCurve();
 //
-//		for (Points::iterator it = dhp.FullCurve().begin(); it != dhp.FullCurve().end(); it++)
+//		for (Points::iterator it = dhp->CurvePoints().begin(); it != dhp->CurvePoints().end(); it++)
 //		{
 //			cvCircle(image, *it, 0, CV_RGB(150,100,100), 1);
 //		}
 //	
 //	    cvLine(image, cvPoint(x-10, y-10), cvPoint(x+10, y+10), CV_RGB(150,100,100), 1, 8, 0); 
-//	    cvLine(image, cvPoint(x+10, y-10), cvPoint(x-10, y+10), CV_RGB(150,100,100), 1, 8, 0); 
+//	    cvLine(image, cvPoint(x+10, y-10), cvPoint(x-10, y+10), CV_RGB(150,100,100), 1, 8, 0);
 //	}  
 //	else if (event == CV_EVENT_LBUTTONDOWN)
 //	{
@@ -108,13 +114,17 @@ void DoubleHalfParabola::GenFullCurve()
 // 
 //int main(int argc, char* argv[]) 
 //{ 
+//	DoubleHalfParabola *dhp = new DoubleHalfParabola(cvPoint(200, 200), cvPoint(500, 200), cvPoint(250, 200), 10);
 //	CvSize image_sz = cvSize(1000,1000);  
 //	image = cvCreateImage(image_sz , 8, 3); 
 //	cvNamedWindow("Tinny Tiger", CV_WINDOW_AUTOSIZE); 
-//	cvSetMouseCallback("Tinny Tiger", on_mouse);//, &bc); 
+//	cvSetMouseCallback("Tinny Tiger", on_mouse, dhp); 
 //	//cvResizeWindow("Tinny Tiger",500,500); 
 // 
-//	cvWaitKey(0); 
+//	cvShowImage("Tinny Tiger", image); 
+//	cvWaitKey(0);
+//
+//	delete dhp; 
 //	return 0; 
 //}
 //// ----------test----------|
