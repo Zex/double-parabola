@@ -1,4 +1,5 @@
 double-parabola
 ===============
 
-generate curve from three points in parabola way
+Create curve with two half-parabola. This project is Based on OpenCV.
+
