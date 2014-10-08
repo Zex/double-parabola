@@ -6,9 +6,9 @@
 #ifndef __DOUBLE_PARABOLA_H_
 #define __DOUBLE_PARABOLA_H_
 
-#include <cxcore.h> 
-#include <cv.h> 
-#include <highgui.h> 
+#include <opencv/cxcore.h>
+#include <opencv/cv.h>
+#include <opencv/highgui.h>
  
 typedef std::vector<CvPoint> Points;
 //typedef std::vector<int, int> PointsMap;
@@ -24,7 +24,7 @@ class SingleParabola
 
 public:
 
-    SingleParabola();
+    //SingleParabola();
 
     SingleParabola(CvPoint start, CvPoint end, CvPoint vertex, int step = 1); 
 
@@ -45,10 +45,11 @@ public:
 		return step_x_;
 	}
     
-    Points& CurvePoints()
+    Points CurvePoints()
     {
-		Points &ret = curve_points_;
-        return ret;
+//		Points &ret = curve_points_;
+//        return ret;
+		return curve_points_;
     }
 
     void StartPt(CvPoint start)
@@ -81,14 +82,14 @@ public:
         return ret;
     }
 
-    CvPoint VertexPt(CvPoint vertex)
+    void VertexPt(CvPoint vertex)
 	{
 		vertex_ = vertex;
 	}
 
     float* ParabConst();
     void CalcParabConst(CvPoint start, CvPoint end);
-    void GenParabPoints(CvPoint start, CvPoint end, int &index);
+    void GenParabPoints(CvPoint start, CvPoint end, unsigned int &index);
 };
 
 class DoubleHalfParabola : public SingleParabola
@@ -105,6 +106,8 @@ public:
     }
 
     void GenFullCurve();
+//	void PointsRotation(Points &dst_points, Points &src_points, float theta, CvPoint center);
+	Points GetFixedCurve(float theta, CvPoint center);
 
 	void VertexPt(CvPoint vertex);
 	CvPoint VertexPt()
