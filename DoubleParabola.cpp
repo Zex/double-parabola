@@ -17,12 +17,17 @@ SingleParabola::SingleParabola(CvPoint start, CvPoint end, CvPoint vertex, int s
 
 unsigned int SingleParabola::Resize()
 {
-	curve_points_.resize((end_.x - start_.x)/step_x_);
+	unsigned int sz = abs(end_.x - start_.x)+1;
+	sz /= step_x_;
 
-	curve_points_[0].x = start_.x;
-	curve_points_[0].y = start_.y;
-	curve_points_[curve_points_.size()-1].x = end_.x;
-	curve_points_[curve_points_.size()-1].y = end_.y;
+	sz = 3 > sz ? 3 : sz;
+
+	curve_points_.resize(sz);
+
+	curve_points_.at(0).x = start_.x;
+	curve_points_.at(0).y = start_.y;
+	curve_points_.at(curve_points_.size()-1).x = end_.x;
+	curve_points_.at(curve_points_.size()-1).y = end_.y;
 
 	return curve_points_.size();
 }
@@ -45,11 +50,11 @@ void SingleParabola::CalcParabConst(CvPoint start, CvPoint end)
 	c_ = 0;//y-start.y;
 }
 
-void SingleParabola::GenParabPoints(CvPoint start, CvPoint end, int &index)
+void SingleParabola::GenParabPoints(CvPoint start, CvPoint end, unsigned int &index)
 {
 	if (2 > curve_points_.size()) return;
 
-	while (index < curve_points_.size()-1 && curve_points_[index-1].x <= end.x)
+	while (index < curve_points_.size() && curve_points_[index-1].x <= end.x)
 	{
 		curve_points_[index].x = curve_points_[index-1].x + step_x_;
 		float ix = curve_points_[index].x - start.x;
@@ -64,9 +69,26 @@ DoubleHalfParabola::DoubleHalfParabola(CvPoint start, CvPoint end, CvPoint verte
 	VertexPt(vertex);
 }
 
+//void DoubleHalfParabola::PointsRotation(Points &dst_points, Points &src_points, float theta, CvPoint center)
+//{
+//	unsigned int point_number = dst_points.size();
+//
+//	for (unsigned int i = 0; i < point_number; i++)
+//	{
+//		int x = src_points[i].x - center.x;
+//		int y = src_points[i].y - center.y;
+//
+//		int s = (int)(cos(theta)*x - sin(theta)*y);
+//		int t = (int)(sin(theta)*x + cos(theta)*y);
+//
+//		dst_points[i].x = s + center.x;
+//		dst_points[i].y = t + center.y;
+//	}
+//}
+
 void DoubleHalfParabola::GenFullCurve()
 {
-	int index = 1;
+	unsigned int index = 1;
 
 	CalcParabConst(StartPt(), mid1_);
 	GenParabPoints(StartPt(), base::VertexPt(), index);
@@ -86,6 +108,18 @@ void DoubleHalfParabola::VertexPt(CvPoint vertex)
 	base::VertexPt(vertex);
 }
 
+Points DoubleHalfParabola::GetFixedCurve(float theta, CvPoint center)
+{
+	Points src = CurvePoints();
+//	Points dst(src.size());
+//
+//	PointsRotation(dst, src, -theta, center);
+//	PointsRotation(src, dst, theta, center);
+
+	return src;
+}
+
+
 void FlexablePainter::VertexPt(CvPoint vertex)
 {
 	if (StartPt().x > vertex.x)
@@ -101,13 +135,29 @@ void FlexablePainter::PaintFlexable()
 	if (!image_) return;
 
 	GenFullCurve();
+	Points pts = CurvePoints();
 
-	for (Points::iterator it = CurvePoints().begin(); it != CurvePoints().end(); it++)
+	for (Points::iterator it = pts.begin(); it != pts.end(); it++)
 	{
-		cvCircle(image_, *it, 0, CV_RGB(150,100,100), 1);
+		cvCircle(image_, *it, 1, CV_RGB(100,200,150), 2);
 	}
 
 	PaintCross(base::VertexPt());
+
+//	Points dst(pts.size());
+//	PointsRotation(dst, pts, 45, cvPoint(450, 700));
+//
+//	for (Points::iterator it = dst.begin(); it != dst.end(); it++)
+//	{
+//		cvCircle(image_, *it, 1, CV_RGB(100,150,210), 2);
+//	}
+//
+//	PointsRotation(pts, dst, -30, cvPoint(450, 700));
+//
+//	for (Points::iterator it = pts.begin(); it != pts.end(); it++)
+//	{
+//		cvCircle(image_, *it, 1, CV_RGB(100,50,210), 2);
+//	}
 }
 
 void FlexablePainter::PaintCross(CvPoint center)
@@ -124,7 +174,7 @@ void FlexablePainter::PaintCross(CvPoint center)
 //	FlexablePainter *fp = (FlexablePainter*)param;//(cvPoint(200, 200), cvPoint(500, 200), cvPoint(x, y), 10);
 //	fp->VertexPt(cvPoint(x, y)); 
 //
-//	if (event == CV_EVENT_MOUSEMOVE) //修改控制点坐标 
+//	if (event == CV_EVENT_MOUSEMOVE) //淇敼鎺у埗鐐瑰潗鏍?
 //	{
 //		cvZero(image);
 //		fp->PaintFlexable();
@@ -138,10 +188,10 @@ void FlexablePainter::PaintCross(CvPoint center)
 // 
 //int main(int argc, char* argv[]) 
 //{ 
-//	CvSize image_sz = cvSize(1000,1000);  
+//	CvSize image_sz = cvSize(2000, 800);  
 //	image = cvCreateImage(image_sz , 8, 3);
 //
-//	FlexablePainter *fp= new FlexablePainter(image, cvPoint(200, 200), cvPoint(500, 200), cvPoint(250, 200), 10);
+//	FlexablePainter *fp= new FlexablePainter(image, cvPoint(200, 800), cvPoint(700, 800), cvPoint(250, 800), 10);
 //	cvNamedWindow("Tinny Tiger", CV_WINDOW_AUTOSIZE); 
 //	cvSetMouseCallback("Tinny Tiger", on_mouse, fp); 
 //	//cvResizeWindow("Tinny Tiger",500,500); 
